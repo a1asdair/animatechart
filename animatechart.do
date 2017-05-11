@@ -11,7 +11,7 @@ capture prog drop animatechart
 program animatechart,
 
 version 11
-syntax using/ , frames(integer) over(varname) y(varname) id(varname) [gen(string)]
+syntax using/ , graphcmd(string) graphoptions(string) over(varname)
 
 // frames(#) How many frames to generate
 // time(var) the time variable for sequential plots
@@ -26,60 +26,25 @@ syntax using/ , frames(integer) over(varname) y(varname) id(varname) [gen(string
 
 di "`using'"
 
-
-// Create additional copies of observations for frames
-
-
-
-// Test parameters
-
-/*
-local dataset = "C:\Users\ar34\Dropbox\Academic\Academic-Research-Projects\Stata ADO\animatechart\testdata.dta"
-local time = "time"
-local frames = 5
-local y = "y"
-local id = "x"
-local gen = "C:\Users\ar34\Dropbox\Academic\Academic-Research-Projects\Stata ADO\animatechart\animatedata.dta"
-*/
-
-		// Load the dataset
-
-		use "`using'", clear
+		quietly sum frame
+		local fmax = r(max)
 		
-		// Work out the range of time
 		quietly sum `over'
 		local tmax = r(max)
 		local tmin = r(min)
 
-		// Generate the observations for frames
-		gen frame = 1
-		forvalues ff = 2(1) `frames' {
-			quietly append using "`using'",
-			quietly replace frame = `ff' if frame==.
-		}
+		// local cmd = "twoway scatter y x, over(z)"
+		local comma = strpos("`cmd'",",")
 
-		// Reshape for smoothing
-		quietly reshape wide `y' , i(`over' `id') j(frame)
-		quietly sort `id' `over'
+forvalues tt = `tmin'(1)`tmax' {
+	forvalues ff = 1(1)`fmax' {
 		
-		// Linear smoothing
-		local smooth = 1/(`frames'+1)		
-		forvalues ff = 2(1) `frames' {
-			quietly replace `y'`ff' = ((1- (`smooth'*`ff'))*`y'`ff')  +   (`smooth' * `ff' * `y'1[_n+1])
-		}												
+		// local drawgraph = substr("`cmd'",1,`comma'-1) + " if `over'==`tt' & frame==`ff'" + substr("`cmd'",`comma',strlen("`cmd'"))
+		local drawgraph = "`graphcmd'" + " if `over'==`tt' & frame==`ff'" + "`graphoptions'"
+		di "`drawgraph'"
+		`drawgraph'
+	}
+}
 
-		// Reshape dataset back again	
-		quietly reshape long `y' , i(`over' `id') j(frame)
-
-		// Report back to user
-		di "Generated `frames' frames per `over', for a total of " `frames' * (`tmax' - `tmin') " frames."
-
-
-		// Optionally, save the dataset with frames
-		if "`gen'"!="" {				
-			save "`gen'", replace
-		}
-	
-		
 		
 end
