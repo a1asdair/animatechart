@@ -70,8 +70,9 @@ if "`skip'"=="" {
 	// Create animated GIF
 	// Inspired by http://blog.stata.com/2014/03/24/how-to-create-animated-graphics-using-stata/
 	di "`graphpath'"
-	winexec "C:\Program Files\FFmpeg\bin\ffmpeg.exe" -i "`graphpath'/frame_%03d.png" -b:v 512k "`graphpath'/graph.mpg"
-	winexec "C:\Program Files\FFmpeg\bin\ffmpeg.exe" -r 10 -i "`graphpath'graph.mpg" -t 10 -r 10 "`graphpath'graph.gif"
+	// winexec "C:\Program Files\FFmpeg\bin\ffmpeg.exe" -i "`graphpath'/frame_%03d.png" -b:v 512k "`graphpath'/graph.mpg"
+	shell "C:\Program Files\FFmpeg\bin\ffmpeg.exe" -i "`graphpath'/frame_%03d.png" -b:v 512k "`graphpath'/graph.mpg"
+	winexec "C:\Program Files\FFmpeg\bin\ffmpeg.exe" -r 10 -i "`graphpath'/graph.mpg" -t 10 -r 10 "`graphpath'/graph.gif"
 	
 		
 		
