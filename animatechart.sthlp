@@ -31,6 +31,9 @@
 
 
 {syntab:Optional}
+{synopt:{opt consistent}}This is optional, but recommended, and forces the axes to be fixed across frames.
+{synopt:{opt y(varname)}}Specifies the y-variable, so that the y-axis can be fixed. Either y() or x() is required if consistent is specified. 
+{synopt:{opt x(varname)}}Specifies the x-variable, so that the x-axis can be fixed.
 {synopt:{opt graphoptions()}}The options for the overall graph{p_end}
 {synopt:{opt exportoptions()}}The options for the exporting of the individual frames{p_end}
 {synopt:{opt type()}}The filetype for the individual frames{p_end}
@@ -39,6 +42,7 @@
 {synopt:{opt mpegopt()}}Allows the options for MPEG genration in FFMPEG to be altered (for advanced users){p_end}
 {synopt:{opt gif}}Combines the frames into an animated GIF file using the external library FFMPEG{p_end}
 {synopt:{opt giftopt()}}Allows the options for GIF generation in FFMPEG to be altered (for advanced users){p_end}
+{synopt:{opt ffmpeg()}}Allows the path to the FFMPEG library to be specified if it is not stored in the default location.
 {synopt:{opt skip}}Skips generating of the frames and goes straight to animating{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -49,137 +53,63 @@
 {title:Description}
 
 {pstd}
-{cmd:progressbar} displays a progress bar for use in loops or repeated tasks.  It is able to track the progress of nested loops incorporating both foreach and forvalues loops.  It can also be used outside of loops where the number of tasks is known.
+{cmd:animatechart} produces a series of graphs to as frames for animation.  It can either produce a series of image files which can then be incorporated into video software, or it can use the free plug-in FFMPEG to produce either .mpeg or animated .gif files.
 
 {pstd}
-{cmd:progressbar} should be called once before the repeated tasks begin to set up the tracking using the init option.  It can then be called each time the progress bar needs to be updated and displayed.  Options allow the display of the progress bar to be customised, and it can also estimate the time to completion.
-
+{cmd:animatechart} works together with {cmd:framegen}, a command which can produce the data for the intermediate frames.
 
 {marker options}{...}
 {title:Options}
 
-{dlgtab:Initialisation}
+{dlgtab:Required}
+
+Only two options are actually mandatory.
 
 {phang}
-{opt init} This option must be specified when the command is called before the loops begin. It allows the calculating of the number of iterations expected in the loops.
+{opt graphcmd} This is a conventional Stata graph command, expected to be a {cmd:twoway} plot.  It should be the full command preceding the overall graph options.  It will be executed unedited.
 
 {phang}
-{opt type()} This indicates the number and type of nested loops.  There are two types of loop supported:
-v	forvalues
-e 	foreach
-Specify in order the types of nested loop e.g. "e v v"
-Any number of forvalues loops are supported; up to 10 nested foreach loops are supported
+{opt over()} This specifies the discrete variable over which the graphs are drawn. Ideally it should be an ordered characetristics that links the series of graphs e.g. years.
+
+{dlgtab:Optional}
+
+There are several options that allow you to customise the operation of {cmd:animatechart}
 
 {phang}
-{opt start()} List the starting values for each of the forvalues loops
-e.g. 1 1 3
+{opt consistent} This is optional, but strongly recommended.  It forces that y-axis (and optionally x-axis) to be fixed across all frames.  This will provide much smoother animations.  If consistent is specified, then either (or both) y() or x() must also be specified.
 
 {phang}
-{opt end()} list the ending value for each of the forvalues loops
-e.g. 10 100 6
+{opt graphoptions()} This allows you to specify overall graph options using standard {cmd:twoway} options.  These options will be included unedited.  Specifying axis range() options could interfere with the presentation of the animation.
 
 {phang}
-{opt step()} Specify the step values for each of the forvalue loops
-If they are all 1, then this option can be omitted, otheriwse it must be specified
-e.g. 2 1 1
+{opt exportoptions()} This allows you to specify any standard options for the {cmd:graph export} command that generates the frames.
 
 {phang}
-{opt list#()} Include the list for each of the foreach loops in turn, where # should be 1 for the first list, 2 for the second list, etc.  progressbar supports up to 10 nested foreach loops.
+{opt type()}This specifies the filetype for the exported frames.  The standard file formats available in {cmd:graph export} can be specified.  If you are using FFMPEG to generate the animation you should leav out this option unless you are an advanced user.
 
 {phang}
-{opt time()}
-This option needs to be specified in both the initiation and looping commands.  Here it records the start time of the looped tasks.
-
+{opt graphpath()}Specifies the path to save the final animated graph to.  This can be omitted if the path is the same as the path specified in using.
 
 {phang}
-{opt width()}
-Allows the user to specify the width of the bar displayed in characters.  The progress bar will be scaled when displayed to fit within the character limit.  This is useful when the width of the dispaly is limited, or when the progress bar needs to fit with other output being displayed. The default is 80 characters.
+{opt mpeg}This option uses FFMPEG to generate a video file in .mpeg format from the graph frames produced.
 
 {phang}
-{opt loud} This option prevents the -progressbar- from clearing the screen, allowing the output to be preserved.
+{opt mpegopt()}(For advanced users only) This allows you to manually specify the FFMPEG options.  Documentation for FFMPEG is available separately.
 
 {phang}
-{opt display} This option displays the progress bar without incrementing the counter.
+{opt gif}This option uses FFMPEG to generate an animated gif file in .gif format from the graph frames produced. This requires first producing an .mpeg file, so specifying the gif option implies the mpeg option.
 
 {phang}
-{opt time} This option needs to be specified in both the initiation and looping commands for it to work. It estimates the remaining time for the loop, assuming constant runtimes.
+{opt giftopt()}(For advanced users only) This allows you to manually specify the FFMPEG options.  Documentation for FFMPEG is available separately.
 
+{phang}
+{opt ffmpeg()}(For advanced users only) This allows you to manually specify the path to the FFMPEG library.  Only required if it is not in the default location: 
+"C:\Program Files\FFmpeg\bin\ffmpeg.exe"
 
-{marker remarks}{...}
-{title:Remarks}
+{phang}
+{opt skip}This option skips generating the frames, allowing you to re-use frame images that were generated earlier.
 
-{pstd}
-While {cmd:progressbar} will add slightly to runtime, it is helpful to be able to estimate when an intensive loop will finish.
-
-
-{marker examples}{...}
-{title:Examples}
-
-{pstd}
-Before each loop (or set of nested loops), {cmd:. progressbar} must be called  with the option init, along with the specifications of the loops to be carried out. 
-
-{pstd}
-Initialise a simple loop from 1 to 10
-
-{phang}{cmd:. progressbar , init type(v) start(1) end(10) step(1)}{p_end}
-
-{pstd}
-Initialise a simple loop from 1 to 10 including a timer
-
-{phang}{cmd:. progressbar , init type(v) start(1) end(10) time}{p_end}
-
-{pstd}
-Initialise a complicated loop involving two forvalues and two foreach loops of different sizes
-
-{phang}{cmd:. progressbar , init type(v e v e) start(1 5) end(10 25) step(1 5) list1(abc def ghi) list2(a b c d)}{p_end}
-
-{p 4 6 2}
-
-{pstd}
-During a loop (or set of nested loops), {cmd:. progressbar} should be called each time the progress bar should be displayed.  {cmd:. progressbar} should be called once at the nested loops deepest point (i.e. inside all the loops).
-
-{pstd}
-Display a progress bar during a loop
-
-{phang}{cmd:. progressbar , }{p_end}
-
-{pstd}
-Display a progress bar during a loop with a timer
-
-{phang}{cmd:. progressbar , time }{p_end}
-
-{pstd}
-Display a progress bar that is 100 characters wide
-
-{phang}{cmd:. progressbar , width(100)}{p_end}
-
-{p 4 6 2}
-
-{pstd}
-A full example of using progressbar with a forvalues loop.
-
-{phang}{cmd:. progressbar , init type(v) start(1) end(100) time}{p_end}
-
-{phang}{cmd:. forvalues i = 1(1)100 {c -(}}{p_end}
-{phang}{cmd:. 	progressbar , time}{p_end}
-{phang}{cmd:. 	generate x`i' = runiform()}{p_end}
-{phang}{cmd:. {c )-}}{p_end}
-
-
-{pstd}
-A full example of using progressbar with nested loops.
-
-{phang}{cmd:. local alist = "alpha beta gamma"}{p_end}
-
-{phang}{cmd:. progressbar , init type(v e) start(1) end(100) list1(`alist') time}{p_end}
-
-{phang}{cmd:. forvalues i = 1(1)100 {c -(}}{p_end}
-{phang}{cmd:. 		foreach jj in `alist' {c -(}}{p_end}
-{phang}{cmd:. 			progressbar , time}{p_end}
-{phang}{cmd:. 			generate x`i'`jj' = runiform()}{p_end}
-{phang}{cmd:. 		{c )-}}{p_end}
-{phang}{cmd:. {c )-}}{p_end}
-
-
+{phang}
+{opt ()}
 
 
