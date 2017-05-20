@@ -11,7 +11,7 @@ capture prog drop framegen
 program framegen,
 
 version 11
-syntax using/ , frames(integer) over(string) y(string) [x(string)] id(string) [gen(string)] /// [quad(integer)] /// [debug()]
+syntax using/ , frames(integer) over(string) y(string) [x(string)] id(string) [gen(string) quad debug]
 
 // frames(#) How many frames to generate
 // over(var) the time variable for sequential plots
@@ -61,24 +61,87 @@ syntax using/ , frames(integer) over(string) y(string) [x(string)] id(string) [g
 	// Reshape for smoothing
 		quietly reshape wide `y' `x' , i(`over' `id') j(frame)
 		quietly sort `id' `over'
-			
-	// Linear smoothing of y
-		local smooth = 1/(`frames'+1)		
-		forvalues ff = 2(1) `frames' {
-			quietly replace `y'`ff' = ((1- (`smooth'*`ff'))*`y'`ff')  +   (`smooth' * `ff' * `y'1[_n+1])
-		}	
 
-	// Linear smoothing of x
-		if "`x'"!="" {
-			local smooth = 1/(`frames'+1)		
-			forvalues ff = 2(1) `frames' {
-				quietly replace `x'`ff' = ((1- (`smooth'*`ff'))*`x'`ff')  +   (`smooth' * `ff' * `x'1[_n+1])
-			}
-		}
+	if "`quad'" == "" {
+	
+		// Linear smoothing
+		
+			// Linear smoothing of y
+				local smooth = 1/(`frames'+1)		
+				forvalues ff = 2(1)`frames' {
+					quietly replace `y'`ff' = ((1- (`smooth'*`ff'))*`y'`ff')  +   (`smooth' * `ff' * `y'1[_n+1])
+				}	
+
+			// Linear smoothing of x
+				if "`x'"!="" {
+					local smooth = 1/(`frames'+1)		
+					forvalues ff = 2(1) `frames' {
+						quietly replace `x'`ff' = ((1- (`smooth'*`ff'))*`x'`ff')  +   (`smooth' * `ff' * `x'1[_n+1])
+					}
+				}
+	}
+	else {
+	
+		// Quadratic smoothing
+		
+				// Quadratic smoothing of y
+					// Calculate denominator
+					local quadtotal = 0
+					forvalues jj = 1(1)`frames' {
+						local quadtotal = `quadtotal' + ((`frames'+1) * `jj') - `jj'^2
+					}
+						if "`debug'" != "" {
+							gen qtotaly=`quadtotal'
+						}					
+					// and then smooth
+					forvalues ff = 2(1) `frames' {
+						// Smooth formula is a + (b - a)*y[i] where a is time t and b time t+1, y[i] is the smoothing factor at frame i
+						local ffn = `ff' - 1
+						quietly replace `y'`ff' = `y'`ffn' + (`y'1[_n+1]  - `y'1) * ( (((`frames'+1)*`ff') - `ff'^2) / `quadtotal')
+						
+							if "`debug'" != "" {
+								gen qdify`ff' = ( (((`frames'+1)*`ff') - `ff'^2) / `quadtotal')
+							}
+		
+					}	
+					
+				// Quadratic smoothing of x				
+				if "`x'"!="" {
+					// Calculate denominator
+					local quadtotal = 0
+					forvalues jj = 1(1)`frames' {
+						local quadtotal = `quadtotal' + ((`frames'+1) * `jj') - `jj'^2
+					}
+						if "`debug'" != "" {
+							gen qtotalx=`quadtotal'
+						}					
+					// and then smooth
+					forvalues ff = 2(1) `frames' {
+						// Smooth formula is a + (b - a)*y[i] where a is time t and b time t+1, y[i] is the smoothing factor at frame i
+						local ffn = `ff' - 1
+						quietly replace `x'`ff' = `x'`ffn' + (`x'1[_n+1]  - `x'1) * ( (((`frames'+1)*`ff') - `ff'^2) / `quadtotal')
+						
+							if "`debug'" != "" {
+								gen qdifx`ff' = ( (((`frames'+1)*`ff') - `ff'^2) / `quadtotal')
+							}							
+					}
+				}
+				
+		
+		
+	}
 		
 
 	// Reshape dataset back again	
-		quietly reshape long `y' `x', i(`over' `id') j(frame)
+	
+			if "`debug'" != "" {
+				local debugreshape = "qdify"
+				if "`x'"!="" {
+					local debugreshape = "`debugreshape' qdifx"
+				}								
+			}
+	
+		quietly reshape long `y' `x' `debugreshape', i(`over' `id') j(frame)
 
 		
 // Reporting and finish up		
