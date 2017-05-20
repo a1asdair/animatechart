@@ -11,7 +11,7 @@ capture prog drop animatechart
 program animatechart,
 
 version 11
-syntax using/ , graphcmd(string) over(string) [graphoptions(string) exportoptions(string) type(string) graphpath(string) mpeg mpegopt(string) gif gifopt(string) ffmpeg(string) consistent y(string) x(string) skip ]
+syntax using/ , graphcmd(string) over(string) [graphoptions(string) exportoptions(string) type(string) graphpath(string) mpeg mpegopt(string) gif gifopt(string) ffmpeg(string) consistent y(string) x(string) skip progress ]
 		
 // Check everything is in order
 
@@ -81,31 +81,43 @@ if "`skip'"=="" {
 	// Set up consistent axes
 	
 		if "`consistent'"!="" & "`y'" != "" {
-		
+			di "Consistent Y"
 			quietly sum `y'
-			local ymax = r(max)		
-			local ymin = r(min)		
+			local ymax = ceil(r(max))		
+			local ymin = floor(r(min))		
 			local consyaxes = " yscale(range(`ymin' `ymax')) "
+			di "`consyaxes'"
 			
 		}
 		
 		if "`consistent'"!="" & "`x'" != "" {
-		
+			di "Consistent X"
 			quietly sum `x'
-			local xmax = r(max)		
-			local xmin = r(min)		
-			local consyaxes = " xscale(range(`xmin' `xmax')) "
+			local xmax = ceil(r(max))		
+			local xmin = floor(r(min))		
+			local consxaxes = " xscale(range(`xmin' `xmax')) "
+			di "`consxaxes'"
 			
 		}
 		
 
 	// Draw the graphs	
+
+	
+		if "`progress'" !="" {
+			progressbar, init start(`tmin' 1) end(`tmax' `fmax') type(v v) time
+		}
 	
 		local filenum=0
 
 		forvalues tt = `tmin'(1)`tmax' {
-			forvalues ff = 1(1)`fmax' {			
-				local drawgraph = "`graphcmd'" + " if `over'==`tt' & frame==`ff'" + " , `graphoptions'" + " title(`tt')" + "`consyaxes' `consxaxes'"
+			forvalues ff = 1(1)`fmax' {	
+				
+				if "`progress'" !="" {
+					progressbar, time
+				}
+			
+				local drawgraph = "`graphcmd'" + " if `over'==`tt' & frame==`ff'" + " , `graphoptions'" + " title(`tt') " + " `consyaxes' `consxaxes' "
 				di "`drawgraph'"
 				`drawgraph'
 				
@@ -121,6 +133,8 @@ if "`skip'"=="" {
 
 	// Inspired by http://blog.stata.com/2014/03/24/how-to-create-animated-graphics-using-stata/
 		di "`graphpath'"
+		
+
 
 		if "`gif'"!="" {
 			di "mpeg: `mpeg' `mpegopt'  |  gif: `gif' `gifopt'  "
