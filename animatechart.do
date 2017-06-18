@@ -44,7 +44,7 @@ syntax using/ , graphcmd(string) over(string) [graphoptions(string) exportoption
 		}
 		
 		if "`mpegopt'"=="" {
-			local mpegopt = "-b:v 512k"
+			local mpegopt = "-r `fmax' -b:v 512k"
 		}
 		
 		if "`gifopt'" == "" {
@@ -99,7 +99,8 @@ if "`skip'"=="" {
 			di "`consxaxes'"
 			
 		}
-		
+	
+	
 
 	// Draw the graphs	
 
@@ -117,7 +118,7 @@ if "`skip'"=="" {
 					progressbar, time
 				}
 			
-				local drawgraph = "`graphcmd'" + " if `over'==`tt' & frame==`ff'" + " , `graphoptions'" + " title(`tt') " + " `consyaxes' `consxaxes' "
+				local drawgraph = "`graphcmd'" + " if `over'==`tt' & frame==`ff'" + " , `graphoptions'" + " title(`tt') " + " `consyaxes' `consxaxes' "     // + " note(`consyaxes') "
 				di "`drawgraph'"
 				`drawgraph'
 				

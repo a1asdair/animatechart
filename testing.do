@@ -1,10 +1,10 @@
 
 
-framegen using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\animatechart\testdata2.dta", frames(10) over(time) y(y) x(xs) id(idx)
+framegen using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\animatechart\testdatab-AR-20May17.dta", frames(30) over(year) y(y) x(x) id(id)
 
-keep if time<=2004
+// keep if time<=2004
 
- animatechart using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\", skip  graphcmd(twoway scatter y xs) over(time) mpeg gif 
+ animatechart using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\testdataa",   graphcmd(twoway scatter y x) over(year) mpeg progress consistent
 
  
  
@@ -14,7 +14,16 @@ keep if time<=2004
 
 
 
- animatechart using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\testdatab",  graphcmd(twoway line wage occupation) over(year) mpeg consistent y(wage)
+ animatechart using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\testdatab",  graphcmd(twoway line wage occupation) over(year) mpeg consistent y(wage) progress
+
+ 
+ // Test Data C
+ 
+ framegen using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\animatechart\testdataB.dta", frames(24) over(year) y(wage) id(occupation) quad  debug
+
+
+
+ animatechart using "C:\Users\acr\Dropbox\Academic\Academic-Research-Projects\Stata ADO\testdatac",  graphcmd(twoway line wage occupation) over(year) mpeg consistent y(wage) progress
 
  
  
